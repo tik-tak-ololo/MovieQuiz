@@ -68,7 +68,7 @@ final class MovieQuizViewController: UIViewController {
     // принимает на вход булевое значение и ничего не возвращает
     private func showAnswerResult(isCorrect: Bool) {
         
-        let color: CGColor = isCorrect ? UIColor.green.cgColor : UIColor.red.cgColor
+        let color: CGColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
         if isCorrect == true {
             correctAnswers += 1
