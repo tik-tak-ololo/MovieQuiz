@@ -45,22 +45,23 @@ final class MovieQuizViewController: UIViewController {
                 correctAnswer: false)
         ]
     
-    // переменная с индексом текущего вопроса, начальное значение 0
-    // (по этому индексу будем искать вопрос в массиве, где индекс первого элемента 0, а не 1)
     private var currentQuestionIndex = 0
     
-    // переменная со счётчиком правильных ответов, начальное значение закономерно 0
     private var correctAnswers = 0
     
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
-    
+    @IBOutlet private weak var yesButton: UIButton!
+    @IBOutlet private weak var noButton: UIButton!
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        // перемешаем массив с вопросами
-        self.questions.shuffle()
+        
+        imageView.layer.cornerRadius = 20
+        
+        questions.shuffle()
+        
         show(quiz: convert(model: questions[currentQuestionIndex]))
     }
     
@@ -74,10 +75,9 @@ final class MovieQuizViewController: UIViewController {
             correctAnswers += 1
         }
         
-        imageView.layer.masksToBounds = true // даём разрешение на рисование рамки
-        imageView.layer.borderWidth = 8 // толщина рамки
-        imageView.layer.borderColor = color // делаем рамку зелёной
-        imageView.layer.cornerRadius = 20 // радиус скругления углов рамки
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = color
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionOrResults()
@@ -112,13 +112,9 @@ final class MovieQuizViewController: UIViewController {
             message: result.text,
             preferredStyle: .alert)
         
-        // константа с кнопкой для системного алерта
         let action = UIAlertAction(title: result.buttonText, style: .default) { _ in
-            // перемешаем массив с вопросами
             self.questions.shuffle()
-            // код, который сбрасывает игру и показывает первый вопрос
             self.currentQuestionIndex = 0
-            // сбрасываем переменную с количеством правильных ответов
             self.correctAnswers = 0
             let firstQuestion = self.questions[self.currentQuestionIndex]
             let viewModel = self.convert(model: firstQuestion)
@@ -155,52 +151,65 @@ final class MovieQuizViewController: UIViewController {
       }
         
         imageView.layer.borderWidth = 0 // толщина рамки
-        imageView.layer.cornerRadius = 0 // радиус скругления углов рамки
         
+        enabledButtons(true)
+        
+    }
+    
+    private func enabledButtons(_ isEnabled: Bool) {
+        yesButton.isUserInteractionEnabled = isEnabled
+        noButton.isUserInteractionEnabled = isEnabled
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         
-        let isCorrect = questions[currentQuestionIndex].correctAnswer == false
-        showAnswerResult(isCorrect: isCorrect)
+        enabledButtons(false)
+        
+        showAnswerResult(isCorrect: !questions[currentQuestionIndex].correctAnswer)
         
     }
 
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         
-        let isCorrect = questions[currentQuestionIndex].correctAnswer == true
-        showAnswerResult(isCorrect: isCorrect)
+        yesButton.isUserInteractionEnabled = false
+        noButton.isUserInteractionEnabled = false
+        
+        showAnswerResult(isCorrect: questions[currentQuestionIndex].correctAnswer)
         
     }
 
 }
 
-struct QuizQuestion {
-  // строка с названием фильма,
-  // совпадает с названием картинки афиши фильма в Assets
-  let image: String
-  // строка с вопросом о рейтинге фильма
-  let text: String
-  // булевое значение (true, false), правильный ответ на вопрос
-  let correctAnswer: Bool
+private struct QuizQuestion {
+    // строка с названием фильма,
+    // совпадает с названием картинки афиши фильма в Assets
+    let image: String
+    
+    // строка с вопросом о рейтинге фильма
+    let text: String
+    
+    // булевое значение (true, false), правильный ответ на вопрос
+    let correctAnswer: Bool
 }
 
-// вью модель для состояния "Вопрос показан"
-struct QuizStepViewModel {
-  // картинка с афишей фильма с типом UIImage
-  let image: UIImage
-  // вопрос о рейтинге квиза
-  let question: String
-  // строка с порядковым номером этого вопроса (ex. "1/10")
-  let questionNumber: String
+private struct QuizStepViewModel {
+    // картинка с афишей фильма с типом UIImage
+    let image: UIImage
+    
+    // вопрос о рейтинге квиза
+    let question: String
+    
+    // строка с порядковым номером этого вопроса (ex. "1/10")
+    let questionNumber: String
 }
 
-// для состояния "Результат квиза"
-struct QuizResultsViewModel {
-  // строка с заголовком алерта
-  let title: String
-  // строка с текстом о количестве набранных очков
-  let text: String
-  // текст для кнопки алерта
-  let buttonText: String
+private struct QuizResultsViewModel {
+    // строка с заголовком алерта
+    let title: String
+    
+    // строка с текстом о количестве набранных очков
+    let text: String
+    
+    // текст для кнопки алерта
+    let buttonText: String
 }
