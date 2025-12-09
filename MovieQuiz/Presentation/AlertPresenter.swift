@@ -17,8 +17,8 @@ final class AlertPresenter {
             preferredStyle: .alert)
         
         let action = UIAlertAction(title: alertModel.buttonText, style: .default) { _ in
-                alertModel.closure()
-            }
+            alertModel.closure()
+        }
         
         alert.addAction(action)
         
