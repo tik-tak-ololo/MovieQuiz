@@ -17,16 +17,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var noButton: UIButton!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        questionFactory = QuestionFactory(delegate: self)
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         
         imageView.layer.cornerRadius = 20
         
-        questionFactory?.requestNextQuestion()
+        showLoadingIndicator()
+        questionFactory?.loadData()
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -69,7 +71,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
       
         let quizStepViewModelResult = QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
         
@@ -146,6 +148,48 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private func enabledButtons(_ isEnabled: Bool) {
         yesButton.isUserInteractionEnabled = isEnabled
         noButton.isUserInteractionEnabled = isEnabled
+    }
+    
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false      // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating()      // включаем анимацию
+    }
+    
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = true       // говорим, что индикатор загрузки скрыт
+        activityIndicator.stopAnimating()       // выключаем анимацию
+    }
+    
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator() // скрываем индикатор загрузки
+        
+        let alertModel = AlertModel(
+                title: "Ошибка",
+                message: message,
+                buttonText: "Попробовать ещё раз?") { [weak self] in
+                    
+                    guard let self else { return }
+                    
+                    self.currentQuestionIndex = 0
+                    self.correctAnswers = 0
+                    self.questionFactory?.loadData()
+                    
+                }
+        
+        alertPresenter.presentAlert(viewController: self, alertModel: alertModel)
+    }
+    
+    func didLoadDataFromServer() {
+        
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
+
+    }
+
+    func didFailToLoadData(with error: Error) {
+        
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
