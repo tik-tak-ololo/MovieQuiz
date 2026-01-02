@@ -73,7 +73,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
             
             var imageData = Data()
            
-           do {
+            do {
                 imageData = try Data(contentsOf: movie.resizedImageURL)
             } catch {
                 print("Failed to load image")
@@ -81,8 +81,10 @@ final class QuestionFactory: QuestionFactoryProtocol {
             
             let rating = Float(movie.rating) ?? 0
             
-            let text = "Рейтинг этого фильма больше чем 7?"
-            let correctAnswer = rating > 7
+            let quizQuestionData = generateQuizQuestionData(realRating: rating)
+            
+            let text = quizQuestionData.text
+            let correctAnswer = quizQuestionData.correctAnswer
             
             let question = QuizQuestion(image: imageData,
                                          text: text,
@@ -114,7 +116,26 @@ final class QuestionFactory: QuestionFactoryProtocol {
         }
         
         moviesLoader.loadMovies(handler: handler)
-       
     }
     
+    private func generateQuizQuestionData(realRating: Float) -> (text: String, correctAnswer: Bool) {
+        
+        var result = ("", false)
+        
+        let rangeOfRatings: ClosedRange<Int> = 1...10
+        let rating: Float = Float(rangeOfRatings.randomElement()!)
+        
+        let rangeOfOperatorNumbers = 0...1
+        let operatorNumber = rangeOfOperatorNumbers.randomElement()!
+                
+        switch operatorNumber {
+            
+            case 0: result = ("Рейтинг этого фильма больше чем \(Int(rating))?", realRating > rating)
+            case 1: result = ("Рейтинг этого фильма меньше чем \(Int(rating))?", realRating < rating)
+            default : result = ("Рейтинг этого фильма больше чем 7?", realRating > 7)
+            
+        }
+        
+        return result
+    }
 }
