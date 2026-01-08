@@ -93,7 +93,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         let alertModel = AlertModel(
                 title: result.title,
                 message: result.text,
-                buttonText: result.buttonText) { [weak self] in
+                buttonText: result.buttonText,
+                accessibilityIdentifier: "Game results") { [weak self] in
                     
                     guard let self else { return }
                     
