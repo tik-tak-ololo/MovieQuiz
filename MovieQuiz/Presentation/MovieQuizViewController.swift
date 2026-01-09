@@ -23,6 +23,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         super.viewDidLoad()
         
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        presenter.viewController = self
         
         imageView.layer.cornerRadius = 20
         
@@ -47,7 +48,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // приватный метод, который меняет цвет рамки
     // принимает на вход булевое значение и ничего не возвращает
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         
         let color: CGColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
@@ -133,7 +134,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
     }
     
-    private func enabledButtons(_ isEnabled: Bool) {
+    func enabledButtons(_ isEnabled: Bool) {
         yesButton.isUserInteractionEnabled = isEnabled
         noButton.isUserInteractionEnabled = isEnabled
     }
@@ -182,25 +183,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         
-        enabledButtons(false)
-        
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        
-        showAnswerResult(isCorrect: !currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
         
     }
 
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         
-        enabledButtons(false)
-        
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        
-        showAnswerResult(isCorrect: currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
         
     }
 
