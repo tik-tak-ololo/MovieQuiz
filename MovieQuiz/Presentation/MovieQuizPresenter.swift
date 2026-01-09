@@ -7,28 +7,66 @@
 
 import UIKit
 
-final class MovieQuizPresenter {
+final class MovieQuizPresenter: QuestionFactoryDelegate {
     
-    var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
-    
-    let questionsAmount: Int = 10
+    private weak var viewController: MovieQuizViewController?
+    private var questionFactory: QuestionFactoryProtocol?
+    private let statisticService: StatisticServiceProtocol!
     private var currentQuestionIndex = 0
+    private var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
+    private var correctAnswers: Int = 0
     
-    func isLastQuestion() -> Bool {
-        currentQuestionIndex == questionsAmount - 1
+    init(viewController: MovieQuizViewController){
+        self.viewController = viewController
+        statisticService = StatisticService()
+        
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
     }
     
-    func resetQuestionIndex() {
+    func yesButtonClicked() {
+        
+        viewController?.enabledButtons(false)
+        didAnswer(isYes: true)
+    }
+    
+    func noButtonClicked() {
+        
+        viewController?.enabledButtons(false)
+        didAnswer(isYes: false)
+    }
+    
+    func didLoadDataFromServer() {
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+
+    func didFailToLoadData(with error: Error) {
+        viewController?.showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question else {
+            return
+        }
+
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.viewController?.show(quiz: viewModel)
+        }
+    }
+    
+    func restartGame() {
         currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.requestNextQuestion()
     }
     
-    func switchToNextQuestion() {
-        currentQuestionIndex += 1
-    }
-    
-    // метод конвертации, который принимает моковый вопрос и возвращает вью модель для экрана вопроса
-    func convert(model: QuizQuestion) -> QuizStepViewModel {
+    private func convert(model: QuizQuestion) -> QuizStepViewModel {
       
         let quizStepViewModelResult = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
@@ -36,31 +74,74 @@ final class MovieQuizPresenter {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
         
         return quizStepViewModelResult
-        
     }
     
-    func yesButtonClicked() {
+    private func isLastQuestion() -> Bool {
+        currentQuestionIndex == questionsAmount - 1
+    }
+    
+    private func makeResultsMessage() -> String {
         
-        viewController?.enabledButtons(false)
+        let gamesCount = statisticService.gamesCount
+        let bestGameCorrect = statisticService.bestGame.correct
+        let bestGameTotal = statisticService.bestGame.total
+        let bestGameDate = statisticService.bestGame.date
+        let totalAccuracy = statisticService.totalAccuracy
         
+        let resultMessage: String = "Ваш результат: \(correctAnswers)/\(self.questionsAmount)\n"
+        + "Количество сыгранных квизов: \(gamesCount)\n"
+        + "Рекорд: \(bestGameCorrect)/\(bestGameTotal) (\(bestGameDate.dateTimeString))\n"
+        + "Средняя точность: \(String(format: "%.2f", totalAccuracy))%"
+        
+        return resultMessage
+    }
+    
+    private func didAnswer(isYes: Bool) {
         guard let currentQuestion = currentQuestion else {
             return
         }
         
-        viewController?.showAnswerResult(isCorrect: currentQuestion.correctAnswer)
+        let givenAnswer = isYes
         
+        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
-    func noButtonClicked() {
+    private func didAnswer(isCorrectAnswer: Bool) {
+        if isCorrectAnswer == true {
+            correctAnswers += 1
+        }
+    }
+    
+    private func showAnswerResult(isCorrect: Bool) {
         
-        viewController?.enabledButtons(false)
+        didAnswer(isCorrectAnswer: isCorrect)
         
-        guard let currentQuestion = currentQuestion else {
-            return
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self else { return }
+            self.showNextQuestionOrResults()
         }
         
-        viewController?.showAnswerResult(isCorrect: !currentQuestion.correctAnswer)
-        
     }
     
+    private func showNextQuestionOrResults() {
+        
+        if self.isLastQuestion() {
+            statisticService.store(gameResult: GameResult(correct: correctAnswers, total: self.questionsAmount, date: Date()))
+            
+            let viewModel = QuizResultsViewModel(
+                title: "Этот раунд окончен!",
+                text: makeResultsMessage(),
+                buttonText: "Сыграть ещё раз")
+              
+            viewController?.show(quiz: viewModel)
+            
+          } else {
+              currentQuestionIndex += 1
+              questionFactory?.requestNextQuestion()
+          }
+        
+        viewController?.enabledButtons(true)
+    }
 }
