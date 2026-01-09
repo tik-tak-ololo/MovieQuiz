@@ -88,7 +88,7 @@ final class MovieQuizUITests: XCTestCase {
     }
     
     func testGameFinish() {
-        sleep(2)
+        sleep(5)
         for _ in 1...10 {
             app.buttons["No"].tap()
             sleep(2)
@@ -102,7 +102,7 @@ final class MovieQuizUITests: XCTestCase {
     }
 
     func testAlertDismiss() {
-        sleep(2)
+        sleep(5)
         for _ in 1...10 {
             app.buttons["No"].tap()
             sleep(2)
