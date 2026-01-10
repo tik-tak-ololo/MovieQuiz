@@ -21,6 +21,19 @@ final class MovieQuizUITests: XCTestCase {
         
         app = XCUIApplication()
         app.launch()
+        
+        let questionLabel = app.staticTexts["Question Label"]
+        let existsPredicate = NSPredicate(format: "label != ''")
+        
+        // Создаем ожидание на основе состояния элемента
+        let expectation = XCTNSPredicateExpectation(predicate: existsPredicate, object: questionLabel)
+        
+        // Ждем выполнения условия 10 сек.
+        let result = XCTWaiter().wait(for: [expectation], timeout: 10.0)
+        
+        if result == .timedOut {
+            XCTFail("Приложение слишком долго загружалось!")
+        }
     }
 
     override func tearDownWithError() throws {
@@ -32,14 +45,25 @@ final class MovieQuizUITests: XCTestCase {
     
     func testYesButton() {
         
-        sleep(5)
-        
         let firstPoster = app.images["Poster"] // находим первоначальный постер
         let firstPosterData = firstPoster.screenshot().pngRepresentation
         
-        app.buttons["Yes"].tap() // находим кнопку `Да` и нажимаем её
+        // находим кнопку `Да` и нажимаем её
+        let yesButton = app.buttons["Yes"]
+        yesButton.tap()
         
-        sleep(5)
+        // Создаем предикат: ждем, когда кнопка снова станет активной (isEnabled == true)
+        let predicate = NSPredicate(format: "isEnabled == true")
+        
+        // Создаем ожидание на основе состояния элемента
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: yesButton)
+        
+        // Ждем выполнения условия 10 сек.
+        let result = XCTWaiter().wait(for: [expectation], timeout: 10.0)
+        
+        if result == .timedOut {
+            XCTFail("После нажатия кнопка \"Да\" не была разблокирована!")
+        }
         
         let secondPoster = app.images["Poster"] // ещё раз находим постер
         let secondPosterData = secondPoster.screenshot().pngRepresentation
@@ -48,18 +72,30 @@ final class MovieQuizUITests: XCTestCase {
         
         XCTAssertNotEqual(firstPosterData, secondPosterData)
         XCTAssertEqual(indexLabel.label, "2/10")
+        
     }
     
     func testNoButton() {
         
-        sleep(5)
-        
         let firstPoster = app.images["Poster"] // находим первоначальный постер
         let firstPosterData = firstPoster.screenshot().pngRepresentation
         
-        app.buttons["No"].tap() // находим кнопку `Нет` и нажимаем её
+        // находим кнопку `Нет` и нажимаем её
+        let noButton = app.buttons["No"]
+        noButton.tap()
         
-        sleep(5)
+        // Создаем предикат: ждем, когда кнопка снова станет активной (isEnabled == true)
+        let predicate = NSPredicate(format: "isEnabled == true")
+        
+        // Создаем ожидание на основе состояния элемента
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: noButton)
+        
+        // Ждем выполнения условия 10 сек.
+        let result = XCTWaiter().wait(for: [expectation], timeout: 10.0)
+        
+        if result == .timedOut {
+            XCTFail("После нажатия кнопка \"Нет\" не была разблокирована!")
+        }
         
         let secondPoster = app.images["Poster"] // ещё раз находим постер
         let secondPosterData = secondPoster.screenshot().pngRepresentation
@@ -71,32 +107,68 @@ final class MovieQuizUITests: XCTestCase {
     }
     
     func testGameFinish() {
-        sleep(5)
+        
         for _ in 1...10 {
-            app.buttons["No"].tap()
-            sleep(2)
+            // находим кнопку `Нет` и нажимаем её
+            let noButton = app.buttons["No"]
+            noButton.tap()
+            
+            // Создаем предикат: ждем, когда кнопка снова станет активной (isEnabled == true)
+            let predicate = NSPredicate(format: "isEnabled == true")
+            
+            // Создаем ожидание на основе состояния элемента
+            let expectation = XCTNSPredicateExpectation(predicate: predicate, object: noButton)
+            
+            // Ждем выполнения условия 10 сек.
+            let result = XCTWaiter().wait(for: [expectation], timeout: 10.0)
+            
+            if result == .timedOut {
+                XCTFail("После нажатия кнопка \"Нет\" не была разблокирована!")
+            }
         }
-
+        
         let alert = app.alerts["Game results"]
         
         XCTAssertTrue(alert.exists)
         XCTAssertTrue(alert.label == "Этот раунд окончен!")
         XCTAssertTrue(alert.buttons.firstMatch.label == "Сыграть ещё раз")
     }
-
+    
     func testAlertDismiss() {
-        sleep(5)
         for _ in 1...10 {
-            app.buttons["No"].tap()
-            sleep(2)
+            // находим кнопку `Нет` и нажимаем её
+            let noButton = app.buttons["No"]
+            noButton.tap()
+            
+            // Создаем предикат: ждем, когда кнопка снова станет активной (isEnabled == true)
+            let predicate = NSPredicate(format: "isEnabled == true")
+            
+            // Создаем ожидание на основе состояния элемента
+            let expectation = XCTNSPredicateExpectation(predicate: predicate, object: noButton)
+            
+            // Ждем выполнения условия 10 сек.
+            let result = XCTWaiter().wait(for: [expectation], timeout: 10.0)
+            
+            if result == .timedOut {
+                XCTFail("После нажатия кнопка \"Нет\" не была разблокирована!")
+            }
         }
         
         let alert = app.alerts["Game results"]
         alert.buttons.firstMatch.tap()
         
-        sleep(2)
-        
         let indexLabel = app.staticTexts["Index"]
+        
+        let predicate = NSPredicate(format: "label == '1/10'")
+        // Создаем ожидание на основе состояния элемента
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: indexLabel)
+        
+        // Ждем выполнения условия 10 сек.
+        let result = XCTWaiter().wait(for: [expectation], timeout: 10.0)
+        
+        if result == .timedOut {
+            XCTFail("Перезапуск игры не удался!")
+        }
         
         XCTAssertFalse(alert.exists)
         XCTAssertTrue(indexLabel.label == "1/10")

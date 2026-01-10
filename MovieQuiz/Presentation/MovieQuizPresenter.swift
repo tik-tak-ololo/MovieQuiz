@@ -28,13 +28,11 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     func yesButtonClicked() {
         
-        viewController?.enabledButtons(false)
         didAnswer(isYes: true)
     }
     
     func noButtonClicked() {
         
-        viewController?.enabledButtons(false)
         didAnswer(isYes: false)
     }
     
@@ -141,7 +139,5 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
               currentQuestionIndex += 1
               questionFactory?.requestNextQuestion()
           }
-        
-        viewController?.enabledButtons(true)
     }
 }

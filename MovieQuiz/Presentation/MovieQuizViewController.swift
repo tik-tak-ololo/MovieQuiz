@@ -16,9 +16,12 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        imageView.layer.cornerRadius = 20
+        activityIndicator.accessibilityIdentifier = "loadingIndicator"
+        
         presenter = MovieQuizPresenter(viewController: self)
         
-        imageView.layer.cornerRadius = 20
+        
     }
     
     // приватный метод вывода на экран вопроса, который принимает на вход вью модель вопроса и ничего не возвращает
@@ -27,6 +30,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
+        
+        enabledButtons(true)
     }
     
     // приватный метод для показа результатов раунда квиза
@@ -43,11 +48,13 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
                 }
         
         alertPresenter.presentAlert(viewController: self, alertModel: alertModel)
+        
+        enabledButtons(true)
     }
         
     func enabledButtons(_ isEnabled: Bool) {
-        yesButton.isUserInteractionEnabled = isEnabled
-        noButton.isUserInteractionEnabled = isEnabled
+        yesButton.isEnabled = isEnabled
+        noButton.isEnabled = isEnabled
     }
     
     func showLoadingIndicator() {
@@ -81,10 +88,12 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        enabledButtons(false)
         presenter.noButtonClicked()
     }
 
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        enabledButtons(false)
         presenter.yesButtonClicked()
     }
 

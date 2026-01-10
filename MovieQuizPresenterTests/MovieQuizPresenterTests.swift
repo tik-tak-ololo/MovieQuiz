@@ -50,8 +50,4 @@ final class MovieQuizViewControllerMock: MovieQuizViewControllerProtocol {
     func showNetworkError(message: String) {
     
     }
-    
-    func enabledButtons(_ isEnabled: Bool) {
-
-    }
 }
